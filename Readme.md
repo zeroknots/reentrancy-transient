@@ -1,4 +1,4 @@
-# Transient Store Foundry Template
+# ReentrancyGuard with TSTORE
 
 A foundry template with custom `solc` binaries (from [transient-storage](https://github.com/ethereum/solidity/tree/transient-store)) that supports transient storage opcodes in inline assembly.
 ```bash
