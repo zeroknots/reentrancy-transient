@@ -3,21 +3,60 @@ pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
 
-import "src/SimpleTStore.sol";
+import "src/ReentrancyGuard.sol";
 
-contract TestSimpleTStore is Test {
-    SimpleTStore c;
+interface ICallback {
+    function callback() external;
+}
+
+interface IImpl {
+    function i() external returns (uint256);
+    function run(uint256 _i) external;
+}
+
+contract Impl is ReentrancyGuard, IImpl {
+    uint256 public i;
+
+    function run(uint256 _i) public nonReentrant("run") {
+        ICallback(msg.sender).callback();
+        i = _i;
+    }
+}
+
+contract ImplNoGuard is IImpl {
+    uint256 public i;
+
+    function run(uint256 _i) public {
+        ICallback(msg.sender).callback();
+        i = _i;
+    }
+}
+
+contract ReentrancyGuardTest is Test, ICallback {
+    Impl impl;
+    ImplNoGuard implNoGuard;
+
+    uint256 _reentering;
 
     function setUp() public {
-        c = new SimpleTStore();
+        impl = new Impl();
+        implNoGuard = new ImplNoGuard();
     }
 
-    function testEmptyRead() public {
-        assertEq(c.tload(0), 0);
+    function callback() public override {
+        if (_reentering == 0) {
+            _reentering = 1;
+
+            IImpl(msg.sender).run(1337);
+        }
     }
 
-    function testStore() public {
-        c.tstore(0, 1);
-        assertEq(c.tload(0), 1);
+    function test_reentrancy_guard() public {
+        vm.expectRevert();
+        impl.run(42);
+    }
+
+    function test_no_reentrancy_guard() public {
+        implNoGuard.run(42);
     }
 }

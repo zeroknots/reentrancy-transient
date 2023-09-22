@@ -6,19 +6,14 @@ forge build --use bin/solc
 forge test  --use bin/solc
 ```
 
-## Example contract
+## Example
 
 ```solidity
-contract SimpleTStore {
-    function tstore(uint key, uint value) external {
-        assembly {
-            tstore(key, value)
-        }
-    }
-    function tload(uint key) external view returns (uint value) {
-        assembly {
-            value := tload(key)
-        }
+import { ReentrancyGuard } from "reentrancy-transient/ReentrancyGuard.sol";
+contract MyContract is ReentrancyGuard {
+
+    function criticalFunction() nonReentrant("critical") external {
+        //..
     }
 }
 ```
